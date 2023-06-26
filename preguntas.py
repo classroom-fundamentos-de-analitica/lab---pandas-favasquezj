@@ -1,3 +1,12 @@
+"""
+Laboratorio - Manipulación de Datos usando Pandas
+-----------------------------------------------------------------------------------------
+
+Este archivo contiene las preguntas que se van a realizar en el laboratorio.
+
+Utilice los archivos `tbl0.tsv`, `tbl1.tsv` y `tbl2.tsv`, para resolver las preguntas.
+
+"""
 import pandas as pd
 
 tbl0 = pd.read_csv("tbl0.tsv", sep="\t")
@@ -13,7 +22,8 @@ def pregunta_01():
     40
 
     """
-    return len(tbl0)
+    filas = len(tbl0)
+    return filas
 
 
 def pregunta_02():
@@ -24,7 +34,8 @@ def pregunta_02():
     4
 
     """
-    return len(tbl0.columns)
+    columnas = tbl0.shape
+    return columnas[1]
 
 
 def pregunta_03():
@@ -41,7 +52,8 @@ def pregunta_03():
     Name: _c1, dtype: int64
 
     """
-    return tbl0['_c1'].value_counts().sort_index()
+    registros = tbl0.groupby('_c1')['_c1'].count()
+    return registros
 
 
 def pregunta_04():
@@ -56,10 +68,8 @@ def pregunta_04():
     E    4.785714
     Name: _c2, dtype: float64
     """
-    promedio = tbl0[['_c1', '_c2']].groupby(['_c1']).mean()
-    total = promedio.squeeze()
-
-    return total
+    promedio = tbl0.groupby('_c1')['_c2'].mean()
+    return promedio
 
 
 def pregunta_05():
@@ -76,11 +86,8 @@ def pregunta_05():
     E    9
     Name: _c2, dtype: int64
     """
-
-    maximo = tbl0[['_c1', '_c2']].groupby(['_c1']).max()
-    respuesta = maximo.squeeze()
-    return respuesta
-
+    valorMax = tbl0.groupby('_c1')['_c2'].max()
+    return valorMax
 
 
 def pregunta_06():
@@ -92,10 +99,10 @@ def pregunta_06():
     ['A', 'B', 'C', 'D', 'E', 'F', 'G']
 
     """
-
     unicos = tbl1['_c4'].unique()
-    ordenada = sorted(map(lambda x: x.upper(), unicos))
-    return ordenada
+    unicos = list(unicos)
+    unicos.sort()
+    return [letra.upper() for letra in unicos]
 
 
 def pregunta_07():
@@ -111,7 +118,8 @@ def pregunta_07():
     E    67
     Name: _c2, dtype: int64
     """
-    return tbl0.groupby('_c1')['_c2'].sum()
+    suma = tbl0.groupby('_c1')['_c2'].sum()
+    return suma
 
 
 def pregunta_08():
@@ -166,12 +174,15 @@ def pregunta_10():
     3   D                  1:2:3:5:5:7
     4   E  1:1:2:3:3:4:5:5:5:6:7:8:8:9
     """
-    columna1 = list(tbl0['_c1'].unique())
-    columna1.sort()
-    cantidad = tbl0.groupby('_c1')['_c2'].apply(lambda x: ':'.join(str(e) for e in sorted(x)))
-    resultado = pd.DataFrame({"_c2": list(cantidad.array)}, index=pd.Series(columna1, name="_c1"),)
-
-    return resultado
+    letras = sorted(tbl0._c1.unique())
+    data = {"_c2": []}
+    for letra in letras:
+        valoresC2 = sorted(tbl0[tbl0._c1 == letra]._c2)
+        listaC2 = [str(i) for i in valoresC2]
+        valorString = ":".join(listaC2)
+        data["_c2"] = data["_c2"] + [valorString]
+    result = pd.DataFrame(data, index=pd.Series(letras, name="_c1"))
+    return result
 
 
 def pregunta_11():
@@ -190,12 +201,14 @@ def pregunta_11():
     38   38      d,e
     39   39    a,d,f
     """
-    cantidad = tbl1.groupby('_c0')['_c4'].apply(lambda x: ','.join(str(e) for e in sorted(x)))
-    columna0 = list(tbl1['_c0'].unique())
-    columna0.sort()
-    resultado = pd.DataFrame({'_c0': columna0, "_c4": list(cantidad.array)})
-
-    return resultado
+    numeros = tbl1._c0.unique()
+    data = {"_c0": numeros, "_c4": []}
+    for numero in numeros:
+        valores = sorted(tbl1[tbl1._c0 == numero]._c4)
+        valoresString = ",".join(valores)
+        data["_c4"] += [valoresString]
+    result = pd.DataFrame(data)
+    return result
 
 
 def pregunta_12():
@@ -215,12 +228,11 @@ def pregunta_12():
     """
     tbl2['_c5b'] = tbl2['_c5b'].apply(lambda x: str(x))
     tbl2['_c5'] = tbl2[['_c5a', '_c5b']].apply(':'.join, axis=1)
-    
-    columna0 = sorted(list(tbl2['_c0'].unique()))
-    columna5 = tbl2.groupby('_c0')['_c5'].apply(lambda x: ','.join(e for e in sorted(x)))
+    col0 = sorted(list(tbl2['_c0'].unique()))
+    col5 = tbl2.groupby('_c0')['_c5'].apply(lambda x: ','.join(e for e in sorted(x)))
 
-    resultado = pd.DataFrame({'_c0': columna0, "_c5": list(columna5.array)})
-    return resultado
+    result = pd.DataFrame({'_c0': col0, "_c5": list(col5.array)})
+    return result
 
 
 def pregunta_13():
@@ -237,8 +249,4 @@ def pregunta_13():
     E    275
     Name: _c5b, dtype: int64
     """
-    suma = pd.merge(tbl0, tbl2, on='_c0', how='inner')
-
-    respuesta = suma[['_c1', '_c5b']].groupby(['_c1']).sum()
-    resultado = respuesta.squeeze()
-    return resultado
+    return ((pd.merge(tbl2,tbl0).groupby("_c1").sum()["_c5b"]))
