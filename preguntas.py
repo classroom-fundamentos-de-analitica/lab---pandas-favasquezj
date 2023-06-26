@@ -1,17 +1,9 @@
-"""
-Laboratorio - Manipulación de Datos usando Pandas
------------------------------------------------------------------------------------------
-
-Este archivo contiene las preguntas que se van a realizar en el laboratorio.
-
-Utilice los archivos `tbl0.tsv`, `tbl1.tsv` y `tbl2.tsv`, para resolver las preguntas.
-
-"""
 import pandas as pd
 
 tbl0 = pd.read_csv("tbl0.tsv", sep="\t")
 tbl1 = pd.read_csv("tbl1.tsv", sep="\t")
 tbl2 = pd.read_csv("tbl2.tsv", sep="\t")
+
 
 def pregunta_01():
     """
@@ -49,7 +41,7 @@ def pregunta_03():
     Name: _c1, dtype: int64
 
     """
-    return tbl0["_c1"].value_counts().sort_index()
+    return tbl0['_c1'].value_counts().sort_index()
 
 
 def pregunta_04():
@@ -64,8 +56,10 @@ def pregunta_04():
     E    4.785714
     Name: _c2, dtype: float64
     """
-    Z = tbl0[['_c1', '_c2']].groupby(['_c1']).mean()
-    return Z.squeeze()
+    promedio = tbl0[['_c1', '_c2']].groupby(['_c1']).mean()
+    total = promedio.squeeze()
+
+    return total
 
 
 def pregunta_05():
@@ -82,7 +76,11 @@ def pregunta_05():
     E    9
     Name: _c2, dtype: int64
     """
-    return tbl0.groupby("_c1").max()["_c2"]
+
+    maximo = tbl0[['_c1', '_c2']].groupby(['_c1']).max()
+    respuesta = maximo.squeeze()
+    return respuesta
+
 
 
 def pregunta_06():
@@ -94,7 +92,10 @@ def pregunta_06():
     ['A', 'B', 'C', 'D', 'E', 'F', 'G']
 
     """
-    return sorted([x.upper() for x in set(tbl1["_c4"].values)])
+
+    unicos = tbl1['_c4'].unique()
+    ordenada = sorted(map(lambda x: x.upper(), unicos))
+    return ordenada
 
 
 def pregunta_07():
@@ -110,7 +111,7 @@ def pregunta_07():
     E    67
     Name: _c2, dtype: int64
     """
-    return tbl0.groupby("_c1").sum()["_c2"]
+    return tbl0.groupby('_c1')['_c2'].sum()
 
 
 def pregunta_08():
@@ -128,9 +129,8 @@ def pregunta_08():
     39   39   E    5  1998-01-26    44
 
     """
-    tablaNueva = tbl0.copy()
-    tablaNueva["suma"] = tbl0["_c0"] + tbl0["_c2"]
-    return tablaNueva
+    tbl0['suma'] = tbl0['_c0'] + tbl0['_c2']
+    return tbl0
 
 
 def pregunta_09():
@@ -148,9 +148,8 @@ def pregunta_09():
     39   39   E    5  1998-01-26  1998
 
     """
-    tablaNueva = tbl0.copy()
-    tablaNueva["year"] = [x.split("-")[0] for x in tbl0["_c3"]]
-    return tablaNueva
+    tbl0['year'] = tbl0['_c3'].map(lambda x: x.split('-')[0])
+    return tbl0
 
 
 def pregunta_10():
@@ -167,9 +166,12 @@ def pregunta_10():
     3   D                  1:2:3:5:5:7
     4   E  1:1:2:3:3:4:5:5:5:6:7:8:8:9
     """
-    tablaNueva = tbl0[["_c1","_c2"]].copy().set_index("_c2").groupby("_c1")
-    proc = {g:":".join(sorted([str(x) for x in c])) for g,c in tablaNueva.groups.items()}
-    return pd.DataFrame({"_c1":proc.keys(), "_c2":proc.values()}).set_index("_c1")
+    columna1 = list(tbl0['_c1'].unique())
+    columna1.sort()
+    cantidad = tbl0.groupby('_c1')['_c2'].apply(lambda x: ':'.join(str(e) for e in sorted(x)))
+    resultado = pd.DataFrame({"_c2": list(cantidad.array)}, index=pd.Series(columna1, name="_c1"),)
+
+    return resultado
 
 
 def pregunta_11():
@@ -188,9 +190,12 @@ def pregunta_11():
     38   38      d,e
     39   39    a,d,f
     """
-    tablaNueva = tbl1.copy().set_index("_c4").groupby("_c0")
-    proc = {g:",".join(sorted([str(x) for x in c])) for g,c in tablaNueva.groups.items()}
-    return pd.DataFrame({"_c0":proc.keys(), "_c4":proc.values()})
+    cantidad = tbl1.groupby('_c0')['_c4'].apply(lambda x: ','.join(str(e) for e in sorted(x)))
+    columna0 = list(tbl1['_c0'].unique())
+    columna0.sort()
+    resultado = pd.DataFrame({'_c0': columna0, "_c4": list(cantidad.array)})
+
+    return resultado
 
 
 def pregunta_12():
@@ -208,11 +213,14 @@ def pregunta_12():
     38   38                    eee:0,fff:9,iii:2
     39   39                    ggg:3,hhh:8,jjj:5
     """
-    tablaNueva = tbl2.copy()
-    tablaNueva["_c5"] = tablaNueva["_c5a"] + ":" + [str(x) for x in tablaNueva["_c5b"]]
-    tb = tablaNueva.drop(["_c5a","_c5b"], axis=1).set_index("_c5").groupby("_c0")
-    proc = {g:",".join(sorted([str(x) for x in c])) for g,c in tb.groups.items()}
-    return pd.DataFrame({"_c0":proc.keys(), "_c5":proc.values()})
+    tbl2['_c5b'] = tbl2['_c5b'].apply(lambda x: str(x))
+    tbl2['_c5'] = tbl2[['_c5a', '_c5b']].apply(':'.join, axis=1)
+    
+    columna0 = sorted(list(tbl2['_c0'].unique()))
+    columna5 = tbl2.groupby('_c0')['_c5'].apply(lambda x: ','.join(e for e in sorted(x)))
+
+    resultado = pd.DataFrame({'_c0': columna0, "_c5": list(columna5.array)})
+    return resultado
 
 
 def pregunta_13():
@@ -229,6 +237,8 @@ def pregunta_13():
     E    275
     Name: _c5b, dtype: int64
     """
-    f = pd.merge(tbl0, tbl2, on='_c0')
-    ct = f.groupby('_c1')['_c5b'].sum()
-    return ct
+    suma = pd.merge(tbl0, tbl2, on='_c0', how='inner')
+
+    respuesta = suma[['_c1', '_c5b']].groupby(['_c1']).sum()
+    resultado = respuesta.squeeze()
+    return resultado
